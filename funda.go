@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 )
 
 type fundaObject struct {
+	id       string
 	address  string
 	price    string
 	url      url.URL
@@ -64,7 +66,7 @@ type fundaSearchResult struct {
 		// HuurPrijsTot                interface{}   `json:"HuurPrijsTot"`
 		// Huurprijs                   interface{}   `json:"Huurprijs"`
 		// HuurprijsFormaat            interface{}   `json:"HuurprijsFormaat"`
-		// ID                          string        `json:"Id"`
+		ID string `json:"Id"`
 		// InUnitsVanaf                interface{}   `json:"InUnitsVanaf"`
 		// IndProjectObjectType        bool          `json:"IndProjectObjectType"`
 		// IndTransactieMakelaarTonen  interface{}   `json:"IndTransactieMakelaarTonen"`
@@ -166,6 +168,32 @@ type fundaSearchResult struct {
 	TotaalAantalObjecten int `json:"TotaalAantalObjecten"`
 }
 
+func searchFunda(fundaToken, fundaSearchOptions string, page, pageSize int) (io.ReadCloser, error) {
+	req, err := http.NewRequest("GET", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Funda/0 CFNetwork/887 Darwin/17.0.0")
+
+	u, err := fundaSearchURL(fundaToken, fundaSearchOptions, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+	req.URL = u
+
+	log.Printf("Searching Funda for objects: %v", u.String())
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected HTTP response code `%d` received")
+	}
+
+	return resp.Body, nil
+}
+
 func fundaObjectsFromSearchResult(r io.Reader) (objects fundaObjects, pageCount int, err error) {
 	var result fundaSearchResult
 	if err = json.NewDecoder(r).Decode(&result); err != nil {
@@ -176,8 +204,9 @@ func fundaObjectsFromSearchResult(r io.Reader) (objects fundaObjects, pageCount 
 
 	for _, o := range result.Objects {
 		var houseURL, imageURL *url.URL
-
 		object := &fundaObject{}
+
+		object.id = o.ID
 		object.address = o.Adres
 		object.price = strings.Trim(fmt.Sprintf(
 			"€ %v %v",

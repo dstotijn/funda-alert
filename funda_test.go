@@ -22,12 +22,14 @@ func TestFundaObjectsFromSearchResult(t *testing.T) {
 
 	assert.Equal(t, objects, fundaObjects{
 		&fundaObject{
+			id:       "d113f0dd-4c05-4984-92ca-f7c739623dec",
 			address:  "Hoofdweg 99 - C",
 			price:    "€ 300.000 k.k.",
 			url:      parseURL("http://www.funda.nl/koop/amsterdam/appartement-49397570-hoofdweg-99-c/"),
 			imageURL: parseURL("http://cloud.funda.nl/valentina_media/085/371/511_middel.jpg"),
 		},
 		&fundaObject{
+			id:       "27097d93-3547-47a3-ac9f-b16e1112e9ad",
 			address:  "Geuzenstraat 77 III",
 			price:    "€ 250.000 k.k.",
 			url:      parseURL("http://www.funda.nl/koop/amsterdam/appartement-49397476-geuzenstraat-77-iii/"),

@@ -10,8 +10,6 @@ import (
 )
 
 func TestSendTelegramMessages(t *testing.T) {
-	objects := fundaObjects{&fundaObject{}}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `{"ok":true}`)
 	}))
@@ -19,13 +17,12 @@ func TestSendTelegramMessages(t *testing.T) {
 
 	telegramBaseURL = ts.URL
 
-	err := objects.sendTelegramMessages(42, "foobar")
+	object := &fundaObject{}
+	err := object.sendToTelegram(42, "foobar")
 	assert.Nil(t, err)
 }
 
 func TestSendTelegramMessagesError(t *testing.T) {
-	objects := fundaObjects{&fundaObject{}}
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}))
@@ -33,6 +30,7 @@ func TestSendTelegramMessagesError(t *testing.T) {
 
 	telegramBaseURL = ts.URL
 
-	err := objects.sendTelegramMessages(0, "")
+	object := &fundaObject{}
+	err := object.sendToTelegram(0, "")
 	assert.NotNil(t, err, "HTTP response with non `200 OK` should result in an error.")
 }

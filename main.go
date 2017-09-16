@@ -3,9 +3,12 @@ package main
 import (
 	"flag"
 	"log"
-	"net/http"
 	"os"
+
+	"github.com/boltdb/bolt"
 )
+
+const dbBucket = "FundaObjects"
 
 func main() {
 	telegramChatID := flag.Int("telegramChatID", 0, "Telegram \"chat_id\" to send messages to")
@@ -26,36 +29,51 @@ func main() {
 		log.Fatal("Error: Environment variable `FUNDA_ALERT_TELEGRAM_TOKEN` cannot be empty.")
 	}
 
-	req, err := http.NewRequest("GET", "", nil)
+	db, err := bolt.Open("funda_alert.db", 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(dbBucket))
+		return err
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	u, err := fundaSearchURL(fundaToken, *fundaSearchOptions, 1, 10)
+	r, err := searchFunda(fundaToken, *fundaSearchOptions, 1, 25)
+	if err != nil {
+		log.Fatalf("Error: Could not search Funda: %v", err)
+	}
+	defer r.Close()
+
+	objects, _, err := fundaObjectsFromSearchResult(r)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	req.URL = u
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Error: Unexpected HTTP response code `%d` received.", resp.StatusCode)
-	}
-
-	objects, _, err := fundaObjectsFromSearchResult(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	log.Printf("Retrieved %d object(s).", len(objects))
 
-	if err := objects.sendTelegramMessages(*telegramChatID, telegramToken); err != nil {
-		log.Fatal(err)
+	for _, object := range objects {
+		err := db.Update(func(tx *bolt.Tx) error {
+			bucket := tx.Bucket([]byte(dbBucket))
+
+			id := bucket.Get([]byte(object.id))
+			if id != nil {
+				log.Printf("Skipping object (%v), already handled.", object.id)
+				return nil
+			}
+
+			if err := object.sendToTelegram(*telegramChatID, telegramToken); err != nil {
+				return err
+			}
+			log.Printf("Sent message for object (%v) to Telegram.", object.id)
+
+			return bucket.Put([]byte(object.id), nil)
+		})
+		if err != nil {
+			log.Fatalf("Error: Could not handle Funda object: %v", err)
+		}
 	}
 }
