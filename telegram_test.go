@@ -1,26 +1,16 @@
 package main
 
 import (
-	"net/url"
-	"os"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestParseFundaObjects(t *testing.T) {
-	file, err := os.Open("data/funda.html")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	objects, nextURL, err := fundaObjects(file)
-	if err != nil {
-		t.Error(err)
-	}
-
-	assert.Equal(t, objects, []*fundaObject{
+func TestSendTelegramMessages(t *testing.T) {
+	objects := fundaObjects{
 		&fundaObject{
 			address:  "Jan Evertsenstraat 137 F 1057 BV Amsterdam",
 			price:    "€ 250.000 k.k.",
@@ -33,17 +23,15 @@ func TestParseFundaObjects(t *testing.T) {
 			url:      parseURL("https://www.funda.nl/koop/amsterdam/appartement-49389196-tweede-atjehstraat-26-ii/"),
 			imageURL: parseURL("https://cloud.funda.nl/valentina_media/085/236/192_360x240.jpg"),
 		},
-	})
-
-	require.NotNil(t, nextURL)
-	require.Equal(t, *nextURL, parseURL("https://www.funda.nl/koop/amsterdam/p2/"))
-}
-
-func parseURL(s string) url.URL {
-	u, err := url.Parse(s)
-	if err != nil {
-		panic(err)
 	}
 
-	return *u
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, `{"ok":true}`)
+	}))
+	defer ts.Close()
+
+	telegramBaseURL = ts.URL
+
+	err := objects.sendTelegramMessages(42, "foobar")
+	assert.Nil(t, err)
 }
