@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFundaObjectsFromSearchResult(t *testing.T) {
@@ -35,6 +36,15 @@ func TestFundaObjectsFromSearchResult(t *testing.T) {
 	})
 
 	assert.Equal(t, pageCount, 4)
+}
+
+func TestFundaSearchURL(t *testing.T) {
+	exp := parseURL("http://partnerapi.funda.nl/feeds/Aanbod.svc/search/json/foobar/?page=1&pagesize=10&type=koop&website=funda&zo=%2Famsterdam%2F1-dag")
+	got, err := fundaSearchURL("foobar", "/amsterdam/1-dag", 1, 10)
+
+	require.Nil(t, err)
+
+	assert.Equal(t, exp, *got)
 }
 
 func parseURL(s string) url.URL {

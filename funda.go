@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -167,10 +168,11 @@ type fundaSearchResult struct {
 
 func fundaObjectsFromSearchResult(r io.Reader) (objects fundaObjects, pageCount int, err error) {
 	var result fundaSearchResult
-
 	if err = json.NewDecoder(r).Decode(&result); err != nil {
 		return
 	}
+
+	pageCount = result.Paging.AantalPaginas
 
 	for _, o := range result.Objects {
 		var houseURL, imageURL *url.URL
@@ -200,7 +202,23 @@ func fundaObjectsFromSearchResult(r io.Reader) (objects fundaObjects, pageCount 
 		objects = append(objects, object)
 	}
 
-	pageCount = result.Paging.AantalPaginas
-
 	return
+}
+
+func fundaSearchURL(token, searchOptions string, page, pageSize int) (*url.URL, error) {
+	u, err := url.Parse("http://partnerapi.funda.nl/feeds/Aanbod.svc/search/json/" + token + "/")
+	if err != nil {
+		return nil, err
+	}
+
+	q := url.Values{}
+	q.Set("website", "funda")
+	q.Set("type", "koop")
+	q.Set("zo", searchOptions)
+	q.Set("page", strconv.Itoa(page))
+	q.Set("pagesize", strconv.Itoa(pageSize))
+
+	u.RawQuery = q.Encode()
+
+	return u, nil
 }

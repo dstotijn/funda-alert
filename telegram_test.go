@@ -10,20 +10,7 @@ import (
 )
 
 func TestSendTelegramMessages(t *testing.T) {
-	objects := fundaObjects{
-		&fundaObject{
-			address:  "Jan Evertsenstraat 137 F 1057 BV Amsterdam",
-			price:    "€ 250.000 k.k.",
-			url:      parseURL("https://www.funda.nl/koop/amsterdam/appartement-49382543-jan-evertsenstraat-137-f/"),
-			imageURL: parseURL("https://cloud.funda.nl/valentina_media/085/222/384_360x240.jpg"),
-		},
-		&fundaObject{
-			address:  "Tweede Atjehstraat 26 II 1094 LG Amsterdam",
-			price:    "€ 325.000 k.k.",
-			url:      parseURL("https://www.funda.nl/koop/amsterdam/appartement-49389196-tweede-atjehstraat-26-ii/"),
-			imageURL: parseURL("https://cloud.funda.nl/valentina_media/085/236/192_360x240.jpg"),
-		},
-	}
+	objects := fundaObjects{&fundaObject{}}
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `{"ok":true}`)
@@ -34,4 +21,18 @@ func TestSendTelegramMessages(t *testing.T) {
 
 	err := objects.sendTelegramMessages(42, "foobar")
 	assert.Nil(t, err)
+}
+
+func TestSendTelegramMessagesError(t *testing.T) {
+	objects := fundaObjects{&fundaObject{}}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	defer ts.Close()
+
+	telegramBaseURL = ts.URL
+
+	err := objects.sendTelegramMessages(0, "")
+	assert.NotNil(t, err, "HTTP response with non `200 OK` should result in an error.")
 }

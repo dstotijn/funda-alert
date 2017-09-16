@@ -30,7 +30,7 @@ func (objects fundaObjects) sendTelegramMessages(chatID int, botToken string) er
 			if err != nil {
 				return err
 			}
-			return fmt.Errorf("error sending message to telegram: %s", body)
+			return fmt.Errorf("unexpected HTTP response: %s", body)
 		}
 	}
 
