@@ -50,9 +50,9 @@ type fundaSearchResult struct {
 		// DatumAanvaarding            interface{}   `json:"DatumAanvaarding"`
 		// DatumOndertekeningAkte      interface{}   `json:"DatumOndertekeningAkte"`
 		// Foto                        string        `json:"Foto"`
-		// FotoLarge                   string        `json:"FotoLarge"`
-		// FotoLargest                 string        `json:"FotoLargest"`
-		FotoMedium string `json:"FotoMedium"`
+		// FotoLarge string `json:"FotoLarge"`
+		FotoLargest string `json:"FotoLargest"`
+		// FotoMedium string `json:"FotoMedium"`
 		// FotoSecure                  string        `json:"FotoSecure"`
 		// GewijzigdDatum              interface{}   `json:"GewijzigdDatum"`
 		// GlobalID                    int           `json:"GlobalId"`
@@ -225,7 +225,7 @@ func fundaObjectsFromSearchResult(r io.Reader) (objects fundaObjects, pageCount 
 		}
 		object.url = *houseURL
 
-		imageURL, err = url.Parse(o.FotoMedium)
+		imageURL, err = url.Parse(o.FotoLargest)
 		if err != nil {
 			log.Printf("Error parsing image URL: %s", err)
 			return

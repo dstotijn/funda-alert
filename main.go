@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/boltdb/bolt"
 )
@@ -58,8 +59,9 @@ func main() {
 	for _, object := range objects {
 		err := db.Update(func(tx *bolt.Tx) error {
 			bucket := tx.Bucket([]byte(dbBucket))
+			key := []byte(strconv.Itoa(*telegramChatID) + ":" + object.id)
 
-			id := bucket.Get([]byte(object.id))
+			id := bucket.Get(key)
 			if id != nil {
 				log.Printf("Skipping object (%v), already handled.", object.id)
 				return nil
@@ -70,7 +72,7 @@ func main() {
 			}
 			log.Printf("Sent message for object (%v) to Telegram.", object.id)
 
-			return bucket.Put([]byte(object.id), nil)
+			return bucket.Put(key, nil)
 		})
 		if err != nil {
 			log.Fatalf("Error: Could not handle Funda object: %v", err)
