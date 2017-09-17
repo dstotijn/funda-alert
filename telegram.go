@@ -14,8 +14,7 @@ func (object *fundaObject) sendToTelegram(chatID int, botToken string) error {
 	data := url.Values{
 		"chat_id":    []string{strconv.Itoa(chatID)},
 		"parse_mode": []string{"HTML"},
-		"text": []string{fmt.Sprintf(`<a href="%v">&#8205;</a><a href="%v">%v</a>
-%v`, object.imageURL.String(), object.url.String(), object.address, object.price)},
+		"text":       []string{object.telegramText()},
 	}
 
 	resp, err := http.PostForm(telegramBaseURL+"/bot"+botToken+"/sendMessage", data)
@@ -33,4 +32,17 @@ func (object *fundaObject) sendToTelegram(chatID int, botToken string) error {
 	}
 
 	return nil
+}
+
+func (object *fundaObject) telegramText() string {
+	return fmt.Sprintf(`<a href="%v">&#8205;</a><a href="%v">%v</a>
+%v kamer(s), %v m²
+<strong>%v</strong>`,
+		object.imageURL.String(),
+		object.url.String(),
+		object.address,
+		object.numberOfRooms,
+		object.surfaceArea,
+		object.price,
+	)
 }

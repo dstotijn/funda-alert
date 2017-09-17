@@ -14,11 +14,13 @@ import (
 )
 
 type fundaObject struct {
-	id       string
-	address  string
-	price    string
-	url      url.URL
-	imageURL url.URL
+	id            string
+	address       string
+	price         string
+	url           url.URL
+	imageURL      url.URL
+	surfaceArea   int
+	numberOfRooms int
 }
 
 type fundaObjects []*fundaObject
@@ -38,7 +40,7 @@ type fundaSearchResult struct {
 		// AangebodenSindsTekst        string        `json:"AangebodenSindsTekst"`
 		// AanmeldDatum                string        `json:"AanmeldDatum"`
 		// AantalBeschikbaar           interface{}   `json:"AantalBeschikbaar"`
-		// AantalKamers int `json:"AantalKamers"`
+		AantalKamers int `json:"AantalKamers"`
 		// AantalKavels                interface{}   `json:"AantalKavels"`
 		// Aanvaarding                 string        `json:"Aanvaarding"`
 		Adres string `json:"Adres"`
@@ -155,7 +157,7 @@ type fundaSearchResult struct {
 		// WGS84X                 float64     `json:"WGS84_X"`
 		// WGS84Y                 float64     `json:"WGS84_Y"`
 		// WoonOppervlakteTot     int         `json:"WoonOppervlakteTot"`
-		// Woonoppervlakte int    `json:"Woonoppervlakte"`
+		Woonoppervlakte int `json:"Woonoppervlakte"`
 		// Woonplaats      string `json:"Woonplaats"`
 		// ZoekType        []int  `json:"ZoekType"`
 	} `json:"Objects"`
@@ -213,6 +215,8 @@ func fundaObjectsFromSearchResult(r io.Reader) (objects fundaObjects, pageCount 
 			humanize.FormatInteger("#.###,", o.Prijs.Koopprijs),
 			o.Prijs.KoopAbbreviation,
 		), " ")
+		object.surfaceArea = o.Woonoppervlakte
+		object.numberOfRooms = o.AantalKamers
 
 		houseURL, err = url.Parse(o.URL)
 		if err != nil {
