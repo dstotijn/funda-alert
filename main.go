@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/boltdb/bolt"
 )
@@ -50,7 +50,7 @@ func main() {
 	}
 	defer r.Close()
 
-	objects, _, err := fundaObjectsFromSearchResult(r)
+	objects, err := fundaObjectsFromSearchResult(r)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func main() {
 	for _, object := range objects {
 		err := db.Update(func(tx *bolt.Tx) error {
 			bucket := tx.Bucket([]byte(dbBucket))
-			key := []byte(strconv.Itoa(*telegramChatID) + ":" + object.id)
+			key := []byte(fmt.Sprintf("%v:%v", *telegramChatID, object.id))
 
 			id := bucket.Get(key)
 			if id != nil {

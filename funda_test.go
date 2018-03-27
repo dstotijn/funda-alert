@@ -15,38 +15,37 @@ func TestFundaObjectsFromSearchResult(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	objects, pageCount, err := fundaObjectsFromSearchResult(file)
+	objects, err := fundaObjectsFromSearchResult(file)
 	if err != nil {
 		t.Error(err)
 	}
 
 	assert.Equal(t, objects, fundaObjects{
 		&fundaObject{
-			id:            "d113f0dd-4c05-4984-92ca-f7c739623dec",
-			address:       "Hoofdweg 99 - C",
-			price:         "€ 300.000 k.k.",
-			url:           parseURL("http://www.funda.nl/koop/amsterdam/appartement-49397570-hoofdweg-99-c/"),
-			imageURL:      parseURL("http://cloud.funda.nl/valentina_media/085/371/511_grotere.jpg"),
-			surfaceArea:   65,
-			numberOfRooms: 3,
+			id:       4151975,
+			address:  "Graaf Janlaan 24",
+			price:    "€ 595.000",
+			url:      parseURL("https://www.funda.nl/4151975"),
+			imageURL: parseURL("http://cloud.funda.nl/valentina_media/092/438/006_720x480.jpg"),
+
+			surfaceArea: "105 m² / 243 m²",
+			rooms:       "4 kamers",
 		},
 		&fundaObject{
-			id:            "27097d93-3547-47a3-ac9f-b16e1112e9ad",
-			address:       "Geuzenstraat 77 III",
-			price:         "€ 250.000 k.k.",
-			url:           parseURL("http://www.funda.nl/koop/amsterdam/appartement-49397476-geuzenstraat-77-iii/"),
-			imageURL:      parseURL("http://cloud.funda.nl/valentina_media/085/368/478_grotere.jpg"),
-			surfaceArea:   48,
-			numberOfRooms: 3,
+			id:          4093224,
+			address:     "Rapsodie 19",
+			price:       "€ 350.000",
+			url:         parseURL("https://www.funda.nl/4093224"),
+			imageURL:    parseURL("http://cloud.funda.nl/valentina_media/090/656/773_720x480.jpg"),
+			surfaceArea: "148 m² / 174 m²",
+			rooms:       "6 kamers",
 		},
 	})
-
-	assert.Equal(t, pageCount, 4)
 }
 
 func TestFundaSearchURL(t *testing.T) {
-	exp := parseURL("http://partnerapi.funda.nl/feeds/Aanbod.svc/search/json/foobar/?page=1&pagesize=10&type=koop&website=funda&zo=%2Famsterdam%2F1-dag")
-	got, err := fundaSearchURL("foobar", "/amsterdam/1-dag", 1, 10)
+	exp := parseURL("https://mobile.funda.io/api/v1/Aanbod/koop/amsterdam/1-dag?page=1&pageSize=10")
+	got, err := fundaSearchURL("/amsterdam/1-dag", 1, 10)
 
 	require.Nil(t, err)
 

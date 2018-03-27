@@ -36,12 +36,12 @@ func (object *fundaObject) sendToTelegram(chatID int, botToken string) error {
 
 func (object *fundaObject) telegramText() string {
 	return fmt.Sprintf(`<a href="%v">&#8205;</a><a href="%v">%v</a>
-%v kamer(s), %v m²
+%v, %v
 <strong>%v</strong>`,
 		object.imageURL.String(),
 		object.url.String(),
 		object.address,
-		object.numberOfRooms,
+		object.rooms,
 		object.surfaceArea,
 		object.price,
 	)
