@@ -6,15 +6,17 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/dstotijn/go-funda"
 )
 
 var telegramBaseURL = "https://api.telegram.org"
 
-func (object *fundaObject) sendToTelegram(chatID int, botToken string) error {
+func sendToTelegram(house funda.House, chatID int, botToken string) error {
 	data := url.Values{
 		"chat_id":    []string{strconv.Itoa(chatID)},
 		"parse_mode": []string{"HTML"},
-		"text":       []string{object.telegramText()},
+		"text":       []string{telegramText(house)},
 	}
 
 	resp, err := http.PostForm(telegramBaseURL+"/bot"+botToken+"/sendMessage", data)
@@ -34,15 +36,15 @@ func (object *fundaObject) sendToTelegram(chatID int, botToken string) error {
 	return nil
 }
 
-func (object *fundaObject) telegramText() string {
+func telegramText(house funda.House) string {
 	return fmt.Sprintf(`<a href="%v">&#8205;</a><a href="%v">%v</a>
 %v, %v
 <strong>%v</strong>`,
-		object.imageURL.String(),
-		object.url.String(),
-		object.address,
-		object.rooms,
-		object.surfaceArea,
-		object.price,
+		house.ImageURL.String(),
+		house.URL.String(),
+		house.Address,
+		house.Rooms,
+		house.SurfaceArea,
+		house.Price,
 	)
 }

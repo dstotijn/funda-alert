@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/boltdb/bolt"
+	"github.com/dstotijn/go-funda"
 )
 
 const dbBucket = "FundaObjects"
@@ -30,6 +31,8 @@ func main() {
 		log.Fatal("Error: Environment variable `FUNDA_ALERT_TELEGRAM_TOKEN` cannot be empty.")
 	}
 
+	fundaClient := funda.NewClient(fundaToken)
+
 	db, err := bolt.Open("funda_alert.db", 0600, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -44,33 +47,28 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r, err := searchFunda(fundaToken, *fundaSearchOptions, 1, 25)
+	houses, err := fundaClient.Search(*fundaSearchOptions, 1, 25)
 	if err != nil {
 		log.Fatalf("Error: Could not search Funda: %v", err)
 	}
-	defer r.Close()
 
-	objects, err := fundaObjectsFromSearchResult(r)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Retrieved %d object(s).", len(objects))
+	log.Printf("Retrieved %d object(s).", len(houses))
 
-	for _, object := range objects {
+	for _, house := range houses {
 		err := db.Update(func(tx *bolt.Tx) error {
 			bucket := tx.Bucket([]byte(dbBucket))
-			key := []byte(fmt.Sprintf("%v:%v", *telegramChatID, object.id))
+			key := []byte(fmt.Sprintf("%v:%v", *telegramChatID, house.ID))
 
 			id := bucket.Get(key)
 			if id != nil {
-				log.Printf("Skipping object (%v), already handled.", object.id)
+				log.Printf("Skipping object (%v), already handled.", house.ID)
 				return nil
 			}
 
-			if err := object.sendToTelegram(*telegramChatID, telegramToken); err != nil {
+			if err := sendToTelegram(*house, *telegramChatID, telegramToken); err != nil {
 				return err
 			}
-			log.Printf("Sent message for object (%v) to Telegram.", object.id)
+			log.Printf("Sent message for object (%v) to Telegram.", house.ID)
 
 			return bucket.Put(key, nil)
 		})
